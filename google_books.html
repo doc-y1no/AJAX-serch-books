@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GoogleBooksAPIで学ぶ</title>
+  <style>
+    td {
+      border-bottom: 1px solid #ccc;
+      border-left: 1px solid #ccc;
+    }
+    th {
+      border-bottom: 1px solid #ccc;
+      border-left: 1px solid #ccc;
+      text-align: left;
+      padding: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+  </style>
+</head>
+<body>
+  <h1>Book検索</h1>
+  <div>
+    <input type="text" id="key">
+    <button id="send">検索</button>
+  </div>
+  <div>
+    <table id="list">
+      <tr>
+        <th style="width:400px">書籍名</th>
+        <th style="width:200px">出版社</th>
+        <th style="width:400px">画像</th>
+      </tr>
+    </table>
+  </div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script>
+    $("#send").on("click", function() {
+      const url = "https://www.googleapis.com/books/v1/volumes?q=" + $("#key").val();
+      $.ajax({
+        url: url,
+        dataType: "json"
+      }).done(function(data) {
+        console.log(data); // 取得したデータをコンソールに表示
+
+        // エラーを避けるためにデータが正しいか確認
+        if (data && data.items) {
+          let html = "";
+          data.items.forEach(function(item) {
+            let title = item.volumeInfo && item.volumeInfo.title ? item.volumeInfo.title : 'N/A';
+            let publisher = item.volumeInfo && item.volumeInfo.publisher ? item.volumeInfo.publisher : 'N/A';
+            let thumbnail = item.volumeInfo && item.volumeInfo.imageLinks && item.volumeInfo.imageLinks.smallThumbnail ? item.volumeInfo.imageLinks.smallThumbnail : '';
+            let infolink = item.volumeInfo && item.volumeInfo.infoLink ? item.volumeInfo.infoLink : '';
+
+            html += `
+              <tr>
+                <td>${title}</td>
+                <td>${publisher}</td>
+                <td>
+                  <a href="${infolink}" target="_blank">
+                    <img src="${thumbnail}" alt="サムネイル">
+                  </a>
+                </td>
+              </tr>
+            `;
+          });
+          $("#list tr:gt(0)").remove(); // 既存の行を削除（ヘッダー行を除く）
+          $("#list").append(html).fadeIn(1000); // HTMLを設定して表示
+        } else {
+          // 結果がない場合の処理
+          alert("結果が見つかりませんでした。");
+        }
+      }).fail(function(jqXHR, textStatus, errorThrown) {
+        console.error("Error: " + textStatus + ", " + errorThrown);
+        alert("データの取得に失敗しました。");
+      });
+    });
+  </script>
+</body>
+</html>
